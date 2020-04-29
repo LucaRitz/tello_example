@@ -7,7 +7,12 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 find_package(tello_lib REQUIRED)
 include_directories(${TELLO_INCLUDE})
 
+find_package(OpenCV REQUIRED)
+include_directories(${OpenCV_INCLUDE_DIRS})
+
 add_executable(${PROJECT_NAME})
 add_subdirectory(src)
 
-target_link_libraries(${PROJECT_NAME} ${TELLO_LIBS})
+target_link_libraries(${PROJECT_NAME} ${TELLO_LIBS} ${OpenCV_LIBS})
+
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/resources DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
