@@ -1,6 +1,7 @@
 set(tello_lib_location ${tello_example_SOURCE_DIR}/lib/tello)
 
 add_library(tello_lib STATIC IMPORTED)
+set(TELLO_INCLUDE ${tello_lib_location}/include)
 set_target_properties(tello_lib PROPERTIES
         INTERFACE_INCLUDE_DIRECTORIES "${tello_lib_location}/include"
         IMPORTED_LOCATION "${tello_lib_location}/tello.lib"
