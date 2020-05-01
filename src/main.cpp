@@ -38,6 +38,8 @@ int main() {
     ComPtr command = CommandFactory::build(CommandType::COMMAND);
     std::unique_ptr<Response> responseCommand = tello.exec(*(command.value()));
 
+    Logger::get(LoggerType::COMMAND)->info("Test log exe");
+
     Network::disconnect();
 
     // Opencv

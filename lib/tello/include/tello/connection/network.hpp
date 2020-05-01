@@ -5,6 +5,7 @@
 #include "../response/status_response.hpp"
 #include <memory>
 #include "../native/network_interface.hpp"
+#include "../video_analyzer.hpp"
 
 using tello::ConnectionData;
 using std::optional;
@@ -13,6 +14,7 @@ using tello::StatusResponse;
 using std::shared_ptr;
 using std::unique_ptr;
 using tello::NetworkInterface;
+using tello::VideoAnalyzer;
 
 namespace tello {
 
@@ -37,11 +39,18 @@ namespace tello {
         static ConnectionData _videoConnection;
         static std::shared_mutex _connectionMutex;
         static shared_ptr<NetworkInterface> networkInterface;
+        static StatusResponse _statusResponse;
+        static std::shared_mutex _statusMutex;
+        static VideoAnalyzer _videoAnalyzer;
 
         static StatusResponse statusResponseFactory(const NetworkResponse& networkResponse);
         static void invokeStatusListener(const StatusResponse& response, const Tello& tello);
 
+        static string videoResponseFactory(const NetworkResponse& networkResponse);
+        static void invokeVideoListener(const string& response, const Tello& tello);
+
         static UdpListener<StatusResponse, statusResponseFactory, invokeStatusListener> _statusListener;
+        static UdpListener<string, videoResponseFactory, invokeVideoListener> _videoListener;
 
         static optional<ConnectionData>
         connectToPort(unsigned short port, const ConnectionData& connectionData, const LoggerType& loggerType);

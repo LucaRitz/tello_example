@@ -5,11 +5,13 @@
 #include "native/network_interface.hpp"
 #include "response/status_response.hpp"
 #include <shared_mutex>
+#include "response/video_response.hpp"
 
 using std::unique_ptr;
 using std::unordered_map;
 using tello::StatusResponse;
 using tello::NetworkData;
+using tello::VideoResponse;
 
 namespace tello {
 
@@ -18,6 +20,7 @@ namespace tello {
     class Network;
 
     using status_handler = void (*)(const StatusResponse&);
+    using video_handler = void (*)(const VideoResponse& frame);
 
     class Tello {
     public:
@@ -25,6 +28,7 @@ namespace tello {
         ~Tello();
 
         void setStatusHandler(status_handler statusHandler);
+        void setVideoHandler(video_handler videoHandler);
         unique_ptr<Response> exec(const Command& command);
         [[nodiscard]] ip_address ip() const;
 
@@ -38,5 +42,6 @@ namespace tello {
 
         const NetworkData _clientaddr;
         status_handler _statusHandler;
+        video_handler _videoHandler;
     };
 }
