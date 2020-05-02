@@ -1,9 +1,6 @@
 #include <tello/logger/logger.hpp>
 #include <tello/connection/network.hpp>
-#include <tello/command_factory.hpp>
 #include <tello/tello.hpp>
-#include <tello/command.hpp>
-#include <tello/response.hpp>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <iostream>
@@ -13,14 +10,10 @@
 using tello::LoggerSettings;
 using tello::Logger;
 using tello::Network;
-using tello::CommandFactory;
-using tello::Command;
-using tello::CommandType;
 using tello::Tello;
 using tello::Response;
 using tello::Status;
 using std::string;
-using ComPtr = std::optional<std::unique_ptr<Command>>;
 
 using std::cout;
 using std::endl;
@@ -35,8 +28,7 @@ int main() {
 
     Tello tello(TELLO_IP_ADDRESS);
 
-    ComPtr command = CommandFactory::build(CommandType::COMMAND);
-    std::unique_ptr<Response> responseCommand = tello.exec(*(command.value()));
+    std::unique_ptr<Response> responseCommand = tello.command();
 
     Logger::get(LoggerType::COMMAND)->info("Test log exe");
 
