@@ -19,14 +19,33 @@ namespace tello {
 
     enum class CommandType {
         COMMAND,
+
         TAKE_OFF,
         LAND,
-        UP,
+
         STREAM_ON,
         STREAM_OFF,
-        CLOCKWISE_TURN,
 
-        QUERY_WIFI
+        UP,
+        DOWN,
+        LEFT,
+        RIGHT,
+        FORWARD,
+        BACK,
+
+        CLOCKWISE_TURN,
+        COUNTERCLOCKWISE_TURN,
+
+        FLIP,
+
+        EMERGENCY,
+        STOP,
+
+        SET_SPEED,
+        RC_CONTROL,
+
+        READ_SPEED,
+        READ_WIFI
     };
 
     unordered_map<const CommandType, string, EnumClassHash> createNamesMap();

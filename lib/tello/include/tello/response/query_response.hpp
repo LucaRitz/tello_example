@@ -9,14 +9,12 @@ namespace tello {
 
     class QueryResponse : public Response {
     public:
-        explicit QueryResponse(const string& response);
+        QueryResponse() : Response(Status::UNKNOWN), _value(-1) {}
+        explicit QueryResponse(const string& value);
         explicit QueryResponse(const Status& status);
 
         [[nodiscard]] int value() const;
 
-        static unique_ptr<QueryResponse> error();
-        static unique_ptr<QueryResponse> timeout();
-        static unique_ptr<QueryResponse> of(const string& arg);
     private:
         int _value;
 

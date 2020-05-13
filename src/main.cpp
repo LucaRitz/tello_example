@@ -28,7 +28,18 @@ int main() {
 
     Tello tello(TELLO_IP_ADDRESS);
 
-    std::unique_ptr<Response> responseCommand = tello.command();
+    future<Response> commandResponse = tello.command();
+    commandResponse.wait();
+
+    tello.setVideoHandler([](const VideoResponse& video)
+        {
+            const string frame = video.videoFrame();
+            char const* const chars = frame.c_str();
+
+    		
+    		
+
+        });
 
     Logger::get(LoggerType::COMMAND)->info("Test log exe");
 
@@ -51,3 +62,4 @@ int main() {
 
     return 0;
 }
+

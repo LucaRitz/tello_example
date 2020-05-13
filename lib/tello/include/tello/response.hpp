@@ -3,10 +3,16 @@
 #include <unordered_map>
 #include <string>
 #include <memory>
+#include <mutex>
 
 using std::unordered_map;
 using std::string;
-using std::unique_ptr;
+using std::shared_ptr;
+using std::mutex;
+
+namespace tello {
+    class Response;
+}
 
 namespace tello {
 
@@ -19,14 +25,11 @@ namespace tello {
 
     class Response {
     public:
+        Response() : _status(Status::UNKNOWN){}
+        explicit Response(const string& value);
         explicit Response(const Status& status);
-        explicit Response(const string& response);
 
         [[nodiscard]] Status status() const;
-
-        static unique_ptr<Response> error();
-        static unique_ptr<Response> timeout();
-        static unique_ptr<Response> of(const string& arg);
 
     protected:
         Status _status;
