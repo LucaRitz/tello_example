@@ -10,9 +10,14 @@ include_directories(${TELLO_INCLUDE})
 find_package(OpenCV REQUIRED)
 include_directories(${OpenCV_INCLUDE_DIRS})
 
+find_package(ffmpeg REQUIRED)
+include_directories(${ffmpeg_INCLUDE_DIRS})
+
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/)
+
 add_executable(${PROJECT_NAME})
 add_subdirectory(src)
 
-target_link_libraries(${PROJECT_NAME} ${TELLO_LIBS} ${OpenCV_LIBS})
+target_link_libraries(${PROJECT_NAME} ${TELLO_LIBS} ${OpenCV_LIBS} ${ffmpeg_LIBS})
 
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/resources DESTINATION ${CMAKE_CURRENT_BINARY_DIR})

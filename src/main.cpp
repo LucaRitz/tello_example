@@ -4,6 +4,10 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <iostream>
+#include "opencv2/opencv.hpp"
+#include "H264Decoder.hpp"
+#include <chrono>
+#include <thread>
 
 #define TELLO_IP_ADDRESS (ip_address)0xC0A80A01 // 192.168.10.1
 
@@ -31,15 +35,22 @@ int main() {
     future<Response> commandResponse = tello.command();
     commandResponse.wait();
 
+    future<Response> videoResponse = tello.streamon();
+    videoResponse.wait();
+
     tello.setVideoHandler([](const VideoResponse& video)
         {
-            const string frame = video.videoFrame();
-            char const* const chars = frame.c_str();
-
-    		
-    		
-
+            const string& frame = video.videoFrame();
+            H264Decoder decoder;
+            unsigned char buffer[10000];
+            memcpy(buffer, frame.c_str(), frame.size());
+            buffer[frame.size()] = '\0';
+            decoder.decode(buffer, frame.size());
+            decoder.play();
         });
+
+    std::chrono::seconds duration(10);
+    std::this_thread::sleep_for(duration);
 
     Logger::get(LoggerType::COMMAND)->info("Test log exe");
 
