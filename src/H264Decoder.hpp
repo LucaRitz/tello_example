@@ -33,6 +33,7 @@ public :
     void decode(unsigned char *inputbuf, size_t size);
     void play();
     cv::Mat getMat();
+    bool ready() const { return matReady; }
 
 private:
 

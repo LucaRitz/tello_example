@@ -23,6 +23,23 @@ using std::cout;
 using std::endl;
 using namespace cv;
 
+std::string string_to_hex(const unsigned char* input, unsigned int size)
+{
+    static const char hex_digits[] = "0123456789ABCDEF";
+
+    std::string output;
+    output.reserve(size * 2);
+    for (int i = 0; i < size; i++)
+    {
+        output.push_back(hex_digits[input[i] >> 4]);
+        output.push_back(hex_digits[input[i] & 15]);
+    }
+    return output;
+}
+
+H264Decoder decoder;
+bool decodedOne = false;
+
 int main() {
     LoggerSettings settings {"./log/command_log.log", "./log/video_log.log", "./log/status_log.log"};
     Logger::initialize(settings);
@@ -32,37 +49,42 @@ int main() {
 
     Tello tello(TELLO_IP_ADDRESS);
 
-   /* future<Response> commandResponse = tello.command();
+    future<Response> commandResponse = tello.command();
     commandResponse.wait();
 
-    future<Response> videoResponse = tello.streamon();
-    videoResponse.wait();*/
 
-    string frame("ÙkgÞµ\u0006±`»\u001F²®\u0003u¦i8ãŠ\u0017½gÿ\u00AD§ø|ýü$H\\Ñ¼z\u0011í\u001C>%åøÚ\u0007fît\u0001OEÐ`ês—Kç\u008F\u001FóI£O|dµC±í º3sUÑ-…—\u0081Ø_tˆgñ÷Ê1tR^A,ª%ÞŠ^ºcª#V ×\u001C—Y¤\u001D!<š0Æý89\u0011\u001Daç\u0006½€É\u0090\u0016+Ñk\u008DÎ‰)“€zŒ+¶ðø–Æ\u0011Rm(Æmv/š\u001A1¥išÿEÎîÑ¥í\"Ø\"ü \u0003;.ìºï\u009D?\n"
-                 "›9Ê9¡²µ\u00ADò3~\u007F\u0010ÈP\n"
-                 ";‰ˆ\t\u0090wÜà³\n"
-                 "óÌrð’Ùþ;7\u0081)o5\u001AO-ap–N=y\u0017‹\u0019þ÷,\u0015a");
-    H264Decoder decoder;
-    unsigned char buffer[10000];
-    memcpy(buffer, frame.c_str(), frame.size());
-    decoder.decode(buffer, frame.size());
-    decoder.play();
 
     tello.setVideoHandler([](const VideoResponse& video)
-        {
-            const unsigned char* frame = video.videoFrame();
-            H264Decoder decoder;
-            auto* buffer = new unsigned char[video.length()];
-            memcpy(buffer, frame, video.length());
-            decoder.decode(buffer, video.length());
-            delete[] buffer;
-            decoder.play();
-        });
+                          {
+                            if(!decodedOne) {
+                                const unsigned char* frame = video.videoFrame();
 
-    std::chrono::seconds duration(10);
+                                auto* buffer = new unsigned char[video.length()];
+                                memcpy(buffer, frame, video.length());
+                                //std::cout << string_to_hex(video.videoFrame(), video.length()) << std::endl << std::endl;
+                                //std::cout << "Frame finished" << std::endl;
+
+                                decoder.decode(buffer, video.length());
+
+                                decodedOne = decoder.ready();
+                                if (!decodedOne) {
+                                    delete[] buffer;
+                                }
+                            }
+                          });
+
+    future<Response> videoResponse = tello.streamon();
+    videoResponse.wait();
+
+    std::chrono::seconds duration(15);
     std::this_thread::sleep_for(duration);
 
+    decoder.play();
+
     Logger::get(LoggerType::COMMAND)->info("Test log exe");
+
+    future<Response> videoResponseOff = tello.streamoff();
+    videoResponseOff.wait();
 
     Network::disconnect();
 
