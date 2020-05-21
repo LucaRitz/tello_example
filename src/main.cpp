@@ -61,7 +61,7 @@ int main() {
 
                                 auto* buffer = new unsigned char[video.length()];
                                 memcpy(buffer, frame, video.length());
-                                //std::cout << string_to_hex(video.videoFrame(), video.length()) << std::endl << std::endl;
+                                std::cout << string_to_hex(video.videoFrame(), video.length()) << std::endl << std::endl;
                                 //std::cout << "Frame finished" << std::endl;
 
                                 decoder.decode(buffer, video.length());
