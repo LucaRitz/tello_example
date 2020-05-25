@@ -43,6 +43,7 @@ std::string string_to_hex(const unsigned char* input, unsigned int size)
 
 H264Decoder decoder;
 bool decodedOne = false;
+std::vector<Mat> mats;
 
 int main() {
     LoggerSettings settings {"./log/command_log.log", "./log/video_log.log", "./log/status_log.log"};
@@ -56,8 +57,6 @@ int main() {
     future<Response> commandResponse = tello.command();
     commandResponse.wait();
 
-
-
     tello.setVideoHandler([](const VideoResponse& video)
                           {
                             if(!decodedOne) {
@@ -69,9 +68,7 @@ int main() {
 
                                 if (decoder.is_frame_available()) {
                                     const AVFrame& frame = decoder.decode_frame();
-                                    Mat mat(720, 1280, CV_8UC3, frame.data[0], frame.linesize[0]);
-                                    imshow("frame", mat);
-                                    waitKey(10);
+                                    mats.emplace_back(Mat(720, 1280, CV_8UC3, frame.data[0], frame.linesize[0]));
                                 }
                             }
                           });
@@ -81,6 +78,11 @@ int main() {
 
     std::chrono::seconds duration(15);
     std::this_thread::sleep_for(duration);
+
+    for(auto& mat : mats) {
+        imshow("frame", mat);
+        waitKey(10);
+    }
 
     Logger::get(LoggerType::COMMAND)->info("Test log exe");
 
