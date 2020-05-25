@@ -68,7 +68,10 @@ int main() {
 
                                 if (decoder.is_frame_available()) {
                                     const AVFrame& frame = decoder.decode_frame();
-                                    mats.emplace_back(Mat(720, 1280, CV_8UC3, frame.data[0], frame.linesize[0]));
+                                    AVFrame* frameCopy = av_frame_alloc();
+                                    av_frame_copy(frameCopy, &frame);
+
+                                    mats.emplace_back(Mat(720, 1280, CV_8UC3, frameCopy->data[0], frame.linesize[0]));
                                 }
                             }
                           });
