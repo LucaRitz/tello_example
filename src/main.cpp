@@ -9,6 +9,10 @@
 #include <chrono>
 #include <thread>
 
+extern "C" {
+#include <libavcodec/avcodec.h>
+}
+
 #define TELLO_IP_ADDRESS (ip_address)0xC0A80A01 // 192.168.10.1
 
 using tello::LoggerSettings;
@@ -57,18 +61,17 @@ int main() {
     tello.setVideoHandler([](const VideoResponse& video)
                           {
                             if(!decodedOne) {
-                                const unsigned char* frame = video.videoFrame();
-
                                 auto* buffer = new unsigned char[video.length()];
-                                memcpy(buffer, frame, video.length());
+                                memcpy(buffer, video.videoFrame(), video.length());
                                 std::cout << string_to_hex(video.videoFrame(), video.length()) << std::endl << std::endl;
-                                //std::cout << "Frame finished" << std::endl;
 
-                                decoder.decode(buffer, video.length());
+                                decoder.parse(buffer, video.length());
 
-                                decodedOne = decoder.ready();
-                                if (!decodedOne) {
-                                    delete[] buffer;
+                                if (decoder.is_frame_available()) {
+                                    const AVFrame& frame = decoder.decode_frame();
+                                    Mat mat(720, 1280, CV_8UC3, frame.data[0], frame.linesize[0]);
+                                    imshow("frame", mat);
+                                    waitKey(10);
                                 }
                             }
                           });
@@ -78,8 +81,6 @@ int main() {
 
     std::chrono::seconds duration(15);
     std::this_thread::sleep_for(duration);
-
-    decoder.play();
 
     Logger::get(LoggerType::COMMAND)->info("Test log exe");
 
