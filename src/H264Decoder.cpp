@@ -117,7 +117,6 @@ ConverterRGB24::~ConverterRGB24()
     av_frame_free(&framergb);
 }
 
-
 const AVFrame& ConverterRGB24::convert(const AVFrame &frame, ubyte* out_rgb)
 {
     int w = frame.width;
@@ -126,16 +125,18 @@ const AVFrame& ConverterRGB24::convert(const AVFrame &frame, ubyte* out_rgb)
 
     context = sws_getCachedContext(context,
                                    w, h, (AVPixelFormat)pix_fmt,
-                                   w, h, PIX_FMT_RGB24, SWS_BILINEAR,
+                                   w, h, AV_PIX_FMT_BGR24, SWS_BILINEAR,
                                    nullptr, nullptr, nullptr);
+
     if (!context)
         throw H264DecodeFailure("cannot allocate context");
 
     // Setup framergb with out_rgb as external buffer. Also say that we want RGB24 output.
-    avpicture_fill((AVPicture*)framergb, out_rgb, PIX_FMT_RGB24, w, h);
+    avpicture_fill((AVPicture*)framergb, out_rgb, AV_PIX_FMT_BGR24, w, h);
     // Do the conversion.
     sws_scale(context, frame.data, frame.linesize, 0, h,
               framergb->data, framergb->linesize);
+
     framergb->width = w;
     framergb->height = h;
     return *framergb;

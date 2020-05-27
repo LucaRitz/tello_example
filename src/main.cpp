@@ -42,6 +42,7 @@ std::string string_to_hex(const unsigned char* input, unsigned int size)
 }
 
 H264Decoder decoder;
+ConverterRGB24 converter;
 bool decodedOne = false;
 std::vector<Mat> mats;
 
@@ -59,21 +60,42 @@ int main() {
 
     tello.setVideoHandler([](const VideoResponse& video)
                           {
-                            if(!decodedOne) {
-                                auto* buffer = new unsigned char[video.length()];
-                                memcpy(buffer, video.videoFrame(), video.length());
-                                std::cout << string_to_hex(video.videoFrame(), video.length()) << std::endl << std::endl;
+                              //std::cout << string_to_hex(video.videoFrame(), video.length()) << std::endl << std::endl;
 
-                                decoder.parse(buffer, video.length());
+                              std::cout << "Start decoding " << std::endl;
+                              int read = decoder.parse(video.videoFrame(), video.length());
+                              std::cout << "Has read " << read << std::endl;
+                              decoder.parse(video.videoFrame() + video.length(), 0); // Signal end of file
 
-                                if (decoder.is_frame_available()) {
-                                    const AVFrame& frame = decoder.decode_frame();
-                                    AVFrame* frameCopy = av_frame_alloc();
-                                    av_frame_copy(frameCopy, &frame);
+                              if (decoder.is_frame_available()) {
+                                  std::cout << "Frame is available" << std::endl;
+                                  try {
+                                      std::cout << "Decode frame" << std::endl;
+                                      const AVFrame& frame = decoder.decode_frame();
+                                      std::cout << "Frame decoded" << std::endl;
+                                      unsigned char* buffer2 = new unsigned char[video.length()];
+                                      std::cout << "Convert" << std::endl;
+                                      const AVFrame& rgbFrame = converter.convert(frame, buffer2);
+                                      std::cout << "Frame converted" << std::endl;
+                                      AVFrame* frameCopy = av_frame_alloc();
+                                      av_frame_copy(frameCopy, &rgbFrame);
 
-                                    mats.emplace_back(Mat(720, 1280, CV_8UC3, frameCopy->data[0], frame.linesize[0]));
-                                }
-                            }
+                                      std::cout << "---- Frame ----" << std::endl;
+                                      std::cout << "Height: " << rgbFrame.height << std::endl;
+                                      std::cout << "Width: " << rgbFrame.width << std::endl;
+                                      std::cout << "Data Ptr: " << rgbFrame.data[0] << std::endl;
+                                      std::cout << "Linesize: " << rgbFrame.linesize[0] << std::endl;
+
+                                      Mat mat(rgbFrame.height, rgbFrame.width, CV_8UC3, rgbFrame.data[0],
+                                              rgbFrame.linesize[0]);
+                                      imshow("frame", mat);
+                                  } catch(...) {
+                                      std::cout << "Exception occured" << std::endl;
+                                  }
+
+                                 /* mats.emplace_back(Mat(rgbFrame.height, rgbFrame.width, CV_8UC3, frameCopy->data[0],
+                                                        rgbFrame.linesize[0]));*/
+                              }
                           });
 
     future<Response> videoResponse = tello.streamon();
@@ -83,6 +105,7 @@ int main() {
     std::this_thread::sleep_for(duration);
 
     for(auto& mat : mats) {
+        std::cout << "Show Mat" << std::endl;
         imshow("frame", mat);
         waitKey(10);
     }
@@ -91,6 +114,7 @@ int main() {
 
     future<Response> videoResponseOff = tello.streamoff();
     videoResponseOff.wait();
+    std::cout << "Off" << std::endl;
 
     Network::disconnect();
 
