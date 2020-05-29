@@ -42,8 +42,6 @@ std::string string_to_hex(const unsigned char* input, unsigned int size)
 }
 
 H264Decoder decoder;
-ConverterRGB24 converter;
-bool decodedOne = false;
 std::vector<Mat> mats;
 
 int main() {
@@ -72,29 +70,45 @@ int main() {
                                   try {
                                       std::cout << "Decode frame" << std::endl;
                                       const AVFrame& frame = decoder.decode_frame();
+
+                                      if (!frame.key_frame) {
+                                          return;
+                                      }
+
                                       std::cout << "Frame decoded" << std::endl;
-                                      unsigned char* buffer2 = new unsigned char[video.length()];
+
                                       std::cout << "Convert" << std::endl;
-                                      const AVFrame& rgbFrame = converter.convert(frame, buffer2);
-                                      std::cout << "Frame converted" << std::endl;
-                                      AVFrame* frameCopy = av_frame_alloc();
-                                      av_frame_copy(frameCopy, &rgbFrame);
 
-                                      std::cout << "---- Frame ----" << std::endl;
-                                      std::cout << "Height: " << rgbFrame.height << std::endl;
-                                      std::cout << "Width: " << rgbFrame.width << std::endl;
-                                      std::cout << "Data Ptr: " << rgbFrame.data[0] << std::endl;
-                                      std::cout << "Linesize: " << rgbFrame.linesize[0] << std::endl;
+                                      cv::Size actual_size(1024, 720);
+                                      cv::Size half_size(512, 360);
 
-                                      Mat mat(rgbFrame.height, rgbFrame.width, CV_8UC3, rgbFrame.data[0],
-                                              rgbFrame.linesize[0]);
-                                      imshow("frame", mat);
+                                      //Read y, u and v in bytes arrays
+                                      auto* y_buffer = frame.data[0];
+                                      auto* u_buffer = frame.data[1];
+                                      auto* v_buffer = frame.data[2];
+
+                                      cv::Mat y(actual_size, CV_8UC1, y_buffer);
+                                      cv::Mat u(half_size, CV_8UC1, u_buffer);
+                                      cv::Mat v(half_size, CV_8UC1, v_buffer);
+
+                                      cv::Mat u_resized, v_resized;
+                                      cv::resize(u, u_resized, actual_size, 0, 0, cv::INTER_NEAREST); //repeat u values 4 times
+                                      cv::resize(v, v_resized, actual_size, 0, 0, cv::INTER_NEAREST); //repeat v values 4 times
+
+                                      cv::Mat yuv;
+
+                                      std::vector<cv::Mat> yuv_channels = { y, u_resized, v_resized };
+                                      cv::merge(yuv_channels, yuv);
+
+                                      cv::Mat bgr;
+                                      cv::cvtColor(yuv, bgr, cv::COLOR_YUV2BGR);
+
+                                      mats.emplace_back(bgr);
+
+                                      //imshow("frame", bgr);
                                   } catch(...) {
                                       std::cout << "Exception occured" << std::endl;
                                   }
-
-                                 /* mats.emplace_back(Mat(rgbFrame.height, rgbFrame.width, CV_8UC3, frameCopy->data[0],
-                                                        rgbFrame.linesize[0]));*/
                               }
                           });
 
@@ -104,17 +118,17 @@ int main() {
     std::chrono::seconds duration(15);
     std::this_thread::sleep_for(duration);
 
-    for(auto& mat : mats) {
-        std::cout << "Show Mat" << std::endl;
-        imshow("frame", mat);
-        waitKey(10);
-    }
-
     Logger::get(LoggerType::COMMAND)->info("Test log exe");
 
     future<Response> videoResponseOff = tello.streamoff();
     videoResponseOff.wait();
     std::cout << "Off" << std::endl;
+
+    for(auto& mat : mats) {
+        std::cout << "Show Mat" << std::endl;
+        imshow("frame", mat);
+        waitKey(0);
+    }
 
     Network::disconnect();
 
