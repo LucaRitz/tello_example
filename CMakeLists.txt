@@ -17,6 +17,8 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/)
 
 add_executable(${PROJECT_NAME})
 add_subdirectory(src)
+add_subdirectory(lib/shared)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/lib/shared)
 
 target_link_libraries(${PROJECT_NAME} ${TELLO_LIBS} ${OpenCV_LIBS} ${ffmpeg_LIBS})
 
