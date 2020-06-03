@@ -24,6 +24,8 @@ using std::cout;
 using std::endl;
 using namespace cv;
 
+#define FRAMES 20
+
 int main() {
     LoggerSettings settings {"./log/command_log.log", "./log/video_log.log", "./log/status_log.log"};
     Logger::initialize(settings);
@@ -39,17 +41,28 @@ int main() {
     future<Response> response = FrameGrabber::instance().observe(tello);
     response.wait();
 
-    optional<future<Mat>> frameOpt = FrameGrabber::instance().grab(tello.ip());
-    if (frameOpt) {
-        frameOpt->wait();
+    int frameCount = 0;
+    std::vector<Mat> mats;
+    while(frameCount < FRAMES) {
+        optional<future<Mat>> frameOpt = FrameGrabber::instance().grab(tello.ip());
+        if (frameOpt) {
+            frameOpt->wait();
 
-        Mat mat = frameOpt->get();
-        if (!mat.empty()) {
-            imshow("frame", mat);
-            waitKey(0);
-        } else {
-            std::cout << "empty frame (timed out)" << std::endl;
+            Mat mat = frameOpt->get();
+            if (!mat.empty()) {
+                mats.emplace_back(mat);
+                frameCount++;
+            } else {
+                std::cout << "empty frame (timed out)" << std::endl;
+            }
         }
+
+        tello.command();
+    }
+
+    for(auto& mat : mats) {
+        imshow("frame", mat);
+        waitKey(0);
     }
 
     Logger::get(LoggerType::COMMAND)->info("Test log exe");
