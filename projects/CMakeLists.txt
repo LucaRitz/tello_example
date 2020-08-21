@@ -1,1 +1,2 @@
 add_subdirectory(01_frame_grabber)
+add_subdirectory(visual_controller)

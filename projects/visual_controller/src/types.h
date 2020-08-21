@@ -1,0 +1,11 @@
+using byte  = unsigned char;
+using word  = unsigned short;
+using dword = unsigned int;
+using s8    = signed   char;
+using u8    = unsigned char;
+using s16   = signed   short int;
+using u16   = unsigned short int;
+using s32   = signed   int;
+using u32   = unsigned int;
+using u64   = unsigned long long;
+using s64   = signed   long long;
